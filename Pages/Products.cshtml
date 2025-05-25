@@ -1,0 +1,184 @@
+﻿@page
+@model WebApplication2.Pages.ProductsModel
+@{
+    ViewData["Title"] = "Список продуктов";
+}
+
+<h1>Список продуктов</h1>
+
+<div class="card-body">
+    <a class="btn btn-primary" href="/ProductEdit">Добавить продукт</a>
+</div>
+
+<div class="row">
+    <div class="col md-6">
+        <input type="text" class="form-control" id="filterText" placeholder="Введите название продукта" />
+    </div>
+    <div class="col md-6">
+        <button class="btn btn-primary" type="button" id="searchButton">Поиск</button>
+    </div>
+</div>
+<div class="table-respoinsive">
+    <table class="table" id="productsTable">
+        <thead>
+            <tr>
+                <th>Идентификатор</th>
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Категория</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<div class="justify-content-center">
+    <nav aria-label="Пагинация">
+        <ul class="pagination" id="pagination">
+
+        </ul>
+    </nav>
+</div>
+
+@section Scripts {
+    <script>
+        const itemsPerPage = 5;
+        let currentPage = 1;
+        let allItems = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadProducts();
+        });
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('http://localhost:3000/products');
+                if (!response.ok) throw new Error('Ошибка загрузки');
+
+                const data = await response.json();
+                allItems = data;
+                renderProducts();
+                renderPagination();
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось загрузить продукты');
+            }
+        }
+
+        document.getElementById('searchButton').addEventListener('click', function () {
+            currentPage = 1;
+            const filterValue = document.getElementById('filterText').value;
+            filterProducts(filterValue);
+            // filterPrice(600); - для фильтров по цене
+        });
+
+        async function filterProducts(value) {
+            const response = await fetch(`http://localhost:3000/products?name=${value}`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const data = await response.json();
+            allItems = data;
+            renderProducts();
+            renderPagination();
+        }
+
+        async function filterPrice(value) {
+            const response = await fetch(`http://localhost:3000/products?price_lte=${value}`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const data = await response.json();
+            allItems = data;
+            renderProducts();
+            renderPagination();
+        }
+
+        function renderProducts() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = allItems.slice(startIndex, endIndex);
+            const tableBody = document.querySelector('#productsTable tbody');
+            tableBody.innerHTML = paginatedItems.map(product => `
+                                <tr>
+                                    <td>${product.id}</td>
+                                    <td>${product.name}</td>
+                                    <td>${product.price}</td>
+                                    <td>${product.category}</td>
+                                    <td>
+                                        <a href="/ProductEdit?id=${product.id}" class="btn btn-warning">Редактировать</a>
+                                        <button onclick="deleteProduct('${product.id}')" class="btn btn-danger">Удалить</button>
+                                    </td>
+                                </tr>
+                            `).join('');
+        }
+
+        function renderPagination() {            
+            const totalPages = Math.ceil(allItems.length / itemsPerPage);
+            console.log('TotalPages: ', totalPages);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" aria-label="previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>`;
+            prevLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderProducts();
+                    renderPagination();
+                }
+            });
+            pagination.appendChild(prevLi);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderProducts();
+                    renderPagination();
+                });
+                pagination.appendChild(li);
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" aria-label="next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>`;
+            nextLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderProducts();
+                    renderPagination();
+                }
+            });
+            pagination.appendChild(nextLi);
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Вы уверены, что хотите удалить этот продукт?')) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/products/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Ошибка удаления');
+
+                await loadProducts();
+                alert('Продукт успешно удален');
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Не удалось удалить продукт');
+            }
+        }
+    </script>
+}

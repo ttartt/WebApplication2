@@ -1,0 +1,54 @@
+{
+  "products": [
+    {
+      "id": "2",
+      "name": "Смартфон",
+      "price": 699,
+      "category": "Электроника"
+    },
+    {
+      "id": "3f59",
+      "name": "вцц",
+      "price": 1000,
+      "category": "вуцца"
+    },
+    {
+      "id": "f897",
+      "name": "rfrf",
+      "price": 343,
+      "category": "gt"
+    },
+    {
+      "id": "a78b",
+      "name": "увсу",
+      "price": 233,
+      "category": "уау"
+    },
+    {
+      "id": "702c",
+      "name": "увсу",
+      "price": 233,
+      "category": "уауrkfrfe"
+    },
+    {
+      "id": "ee07",
+      "name": "cwccs",
+      "price": 200,
+      "category": "wehjgf"
+    },
+    {
+      "id": "8088",
+      "name": "kjhg",
+      "price": 765,
+      "category": "kjhgfdcvb"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "login": "user@mail.ru",
+      "password": "password",
+      "name": "Володя"
+    }
+  ]
+}

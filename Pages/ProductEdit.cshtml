@@ -1,0 +1,120 @@
+﻿@page
+@{
+    ViewData["Title"] = "Продукт";
+}
+<h1>Продукт</h1>
+
+<div class="container">
+    <form method="post" id="editProductForm" class="row g-3 needs-validation" novalidate>
+        <input type="hidden" name="Id" id="Id" />
+
+        <div class="col-md-12">
+            <label for="Name" class="form-label">Название продукта</label>
+            <input type="text" class="form-control" name="Name" id="Name" required />
+            <div class="invalid-feedback">Пожалуйста, укажите название</div>
+        </div>
+
+        <div class="col-md-12">
+            <label for="Price" class="form-label">Цена продукта</label>
+            <input type="number" class="form-control" name="Price" id="Price" required />
+            <div class="invalid-feedback">Пожалуйста, укажите цену</div>
+        </div>
+
+        <div class="col-md-12">
+            <label for="Category" class="form-label">Категория продукта</label>
+            <input type="text" class="form-control" name="Category" id="Category" required />
+            <div class="invalid-feedback">Пожалуйста, укажите категорию</div>
+        </div>
+
+        <div class="col-12">
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <a href="/Products" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+
+        // валидация
+        (function () {
+            'use strict'
+
+            const form = document.getElementById('editProductForm')
+
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+
+                form.classList.add('was-validated')
+            }, false)
+        })()
+
+        // получение идентификатора элемента
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (productId) {
+                loadProductData(productId);
+            }
+        });
+
+        // загрузка даных по элементу
+        function loadProductData(productId) {
+            fetch(`http://localhost:3000/products/${productId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Ошибка загрузки');
+                    return response.json();
+                })
+                .then(product => {
+                    document.getElementById('Id').value = product.id || "";
+                    document.getElementById('Name').value = product.name || "";
+                    document.getElementById('Price').value = product.price || 0;
+                    document.getElementById('Category').value = product.category || "";
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось загрузить данные продукта');
+                });
+        }
+
+        // обновление/создание продукта
+        document.getElementById('editProductForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const product = {
+                name: document.getElementById('Name').value,
+                price: parseFloat(document.getElementById('Price').value),
+                category: document.getElementById('Category').value
+            };
+
+            const method = product.id ? 'PUT' : 'POST';
+            const url = product.id
+                ? `http://localhost:3000/products/${product.id}`
+                : 'http://localhost:3000/products';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сохранения');
+                return response.json();
+            })
+            .then(data => {
+                alert('Продукт успешно сохранён');
+                window.location.href = '/Products';
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Не удалось сохранить продукт');
+            });
+        });
+    </script>
+}
